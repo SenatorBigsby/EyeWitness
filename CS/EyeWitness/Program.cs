@@ -55,6 +55,12 @@ namespace EyeWitness
 
             [Option( "https", Required = false, HelpText = "Prepend https:// to all URLs", Default = false)]
             public bool https { get; set; }
+
+            [Option("sig", Required = false, HelpText = "Specify category file (if internet is not available)")]
+            public string sig { get; set; }
+
+            [Option("cat", Required = false, HelpText = "Specify category file (if internet is not available)")]
+            public string cat { get; set; }
         }
 
         static void DisplayHelp<T>(ParserResult<T> result)
@@ -107,7 +113,7 @@ namespace EyeWitness
             Directory.CreateDirectory(witnessDir + "\\headers");
         }
 
-        private static void DictMaker()
+        private static void DictMaker(string CatURL, string SigURL, bool local)
         {
             // Capture category and signature codes
             // Grab here so we only have to do it once and iterate through URLs in Main
@@ -116,18 +122,36 @@ namespace EyeWitness
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             WebClient witnessClient = new WebClient();
 
-            try
+            if (local)
             {
-                catCode = witnessClient.DownloadString(CatUrl);
-                sigCode = witnessClient.DownloadString(SigUrl);
-            }
+                try
+                {
+                    catCode = File.ReadAllText(CatURL);
+                    sigCode = File.ReadAllText(SigURL);
+                }
 
-            catch(Exception ex)
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[*]ERROR: Could not read Categories or Signatures, did you specify the paths?");
+                    Console.WriteLine(ex.Message);
+                    System.Environment.Exit(1);
+                }
+            }
+            else
             {
-                Console.WriteLine("[*]ERROR: Could not obtain categories and signatures from Github!");
-                Console.WriteLine("[*]ERROR: Try again, or see if Github is blocked?");
-                Console.WriteLine(ex.Message);
-                System.Environment.Exit(1);
+                try
+                {
+                    catCode = witnessClient.DownloadString(CatUrl);
+                    sigCode = witnessClient.DownloadString(SigUrl);
+                }
+
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[*]ERROR: Could not obtain categories and signatures from Github!");
+                    Console.WriteLine("[*]ERROR: Try again, or see if Github is blocked?");
+                    Console.WriteLine(ex.Message);
+                    System.Environment.Exit(1);
+                }
             }
 
             //Create dictionary of categories
@@ -432,6 +456,8 @@ namespace EyeWitness
             int delay = 30000;
             Stopwatch watch = new Stopwatch();
             watch.Start();
+            string tmp_cat = "";
+            string tmp_sig = "";
 
             //Parse arguments passed
             Parser parser = new Parser(with =>
@@ -440,6 +466,7 @@ namespace EyeWitness
                 with.CaseSensitive = false;
                 with.HelpWriter = null;
             });
+            bool local = false;
 
             ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
             parserResult.WithParsed(o =>
@@ -507,13 +534,26 @@ namespace EyeWitness
                             System.Environment.Exit(1);
                         }
                     }
-
+                    if (o.cat != null && o.sig != null)
+                    {
+                        local = true;
+                        try
+                        {
+                            tmp_cat = o.cat;
+                            tmp_sig = o.sig;
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            Console.WriteLine("[-] ERROR:");
+                            System.Environment.Exit(1);
+                        }
+                    }
                     Options.Instance = o;
                 })
                 .WithNotParsed(errs => DisplayHelp(parserResult));
 
             DirMaker(Options.Instance.Output);
-            DictMaker();
+            DictMaker(tmp_cat, tmp_sig, local);
             Options options = Options.Instance;
             Console.WriteLine("\n");
             // Check for favorites flag and if so add the URLs to the list
