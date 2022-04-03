@@ -1,0 +1,11 @@
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\bin\Debug\EyeWitness.exe.config
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\bin\Debug\EyeWitness.exe
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\bin\Debug\EyeWitness.pdb
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\bin\Debug\CommandLine.xml
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\bin\Debug\Newtonsoft.Json.xml
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.csproj.AssemblyReference.cache
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.csproj.CoreCompileInputs.cache
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.csproj.Fody.CopyLocal.cache
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.csproj.CopyComplete
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.exe
+C:\Users\SenatorBigsby\Source\Repos\EyeWitness\CS\EyeWitness\obj\Debug\EyeWitness.pdb

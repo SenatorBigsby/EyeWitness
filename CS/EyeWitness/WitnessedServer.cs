@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading.Tasks;
 using Microsoft.Win32;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace EyeWitness
 {
@@ -20,11 +22,14 @@ namespace EyeWitness
         public string imgPath = "";
         public string imgPathInternal = "";
         public string urlSaveName = "";
+        public string sanPath = "";
         static string errorState = "";
         public string remoteSystem;
         public string webpageTitle = "";
         public string defaultCreds;
         public string systemCategory = "uncat";
+        public string[] san = new string[] { };
+        public X509Certificate2 cert;
 
         public void CheckCreds(Dictionary<string, string> catDict, Dictionary<string, string> sigDict)
         {
@@ -93,6 +98,7 @@ namespace EyeWitness
             imgPath = Program.witnessDir + "\\images\\" + urlSaveName + ".bmp";
             imgPathInternal = imgPath;
             headerPath = Program.witnessDir + "\\headers\\" + urlSaveName + ".txt";
+            sanPath = Program.witnessDir + "\\san\\" + urlSaveName + ".txt";
         }
 
         public async Task<string> SourcerAsync(CancellationToken cancellationToken)
@@ -109,10 +115,35 @@ namespace EyeWitness
                     try
                     {
                         ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                        // Uri test = Uri.Parse(remoteSystem);
 
                         cancellationToken.Register(witnessClient.CancelAsync);
                         _sourceCode = await witnessClient.DownloadStringTaskAsync(remoteSystem);
+                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(remoteSystem);
+                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                        response.Close();
+                        //retrieve the ssl cert and assign it to an X509Certificate object
+                        X509Certificate cert = request.ServicePoint.Certificate;
+
+                        //convert the X509Certificate to an X509Certificate2 object by passing it into the constructor
+                        X509Certificate2 cert2 = new X509Certificate2(cert);
+
+                        string cn = cert2.Issuer;
+                        string cedate = cert2.GetExpirationDateString();
+                        string cpub = cert2.GetPublicKeyString();
+
+
+                        foreach (X509Extension extension in cert2.Extensions)
+                        {
+                            // Create an AsnEncodedData object using the extensions information.
+                            AsnEncodedData asndata = new AsnEncodedData(extension.Oid, extension.RawData);
+                            if (string.Equals(extension.Oid.FriendlyName, "Subject Alternative Name"))
+                            {
+                                san = asndata.Format(true).Split(new string[] { "\r\n", "DNS Name=" }, StringSplitOptions.RemoveEmptyEntries);
+                            }
+
+                        }
+
+
                         cancellationToken.ThrowIfCancellationRequested();
                         headers = witnessClient.ResponseHeaders.ToString();
 
@@ -120,16 +151,19 @@ namespace EyeWitness
                             RegexOptions.IgnoreCase).Groups["Title"].Value;
                         File.WriteAllText(Program.witnessDir + "\\src\\" + urlSaveName + ".txt", _sourceCode);
                         File.WriteAllText(Program.witnessDir + "\\headers\\" + urlSaveName + ".txt", headers);
+                        string sanFormatted = String.Join("\\n", san);
+                        File.WriteAllText(Program.witnessDir + "\\san\\" + urlSaveName + ".txt", sanFormatted);
                     }
 
                     catch (Exception e)
                     {
                         //Console.WriteLine(e);
-                        Console.WriteLine($"[*] Offline Server - {remoteSystem} - {e.Message}");
+                        Console.WriteLine($"[*] Offline Server - {remoteSystem}");
                         errorState = "offline";
                         systemCategory = "offline";
                         webpageTitle = "Server Offline";
                         headers = "Server Offline";
+                        san = new string[] { };
                     }
                     finally
                     {
