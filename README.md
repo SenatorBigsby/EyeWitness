@@ -1,6 +1,6 @@
 EyeWitness
 ======
-This is a fork of EyeWitness with added functionality to use local sig and cat files, display Subject Alternative Names, and to skip screenshots (for very large URL lists).
+This is a fork of EyeWitness with added functionality to use local sig and cat files, display Subject Alternative Names, and to skip screenshots (for very large URL lists). Only the Windows part has been changed.
 
 EyeWitness is designed to take screenshots of websites provide some server header info, and identify default credentials if known.
 
