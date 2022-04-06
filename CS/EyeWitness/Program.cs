@@ -26,7 +26,7 @@ namespace EyeWitness
         public static Dictionary<string, string> categoryDict = new Dictionary<string, string>();
         public static Dictionary<string, string> signatureDict = new Dictionary<string, string>();
         public static Dictionary<string, object[]> categoryRankDict = new Dictionary<string, object[]>();
-        private static readonly Semaphore Pool = new Semaphore(2, 2);
+        private static readonly Semaphore Pool = new Semaphore(2,2);
         //private static SemaphoreSlim _pool = new SemaphoreSlim(2);
         private static readonly SemaphoreSlim Sourcepool = new SemaphoreSlim(10);
 
@@ -62,7 +62,7 @@ namespace EyeWitness
             [Option("cat", Required = false, HelpText = "Specify category file (if internet is not available)")]
             public string cat { get; set; }
 
-            [Option('s', "skip", Required = false, HelpText = "Skip screenshots")]
+            [Option('s',"skip", Required = false, HelpText = "Skip screenshots")]
             public bool skip { get; set; }
         }
 
@@ -103,13 +103,13 @@ namespace EyeWitness
                     {
                         Directory.CreateDirectory(witnessPath);
                     }
-                    catch
+                    catch 
                     {
                         witnessPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                     }
                 }
             }
-
+            
             witnessDir = witnessPath + "\\EyeWitness_" + DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
             Directory.CreateDirectory(witnessDir + "\\src");
             Directory.CreateDirectory(witnessDir + "\\images");
@@ -125,8 +125,8 @@ namespace EyeWitness
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             WebClient witnessClient = new WebClient();
-            if (local)
-            {
+            if(local)
+            { 
                 try
                 {
                     catCode = File.ReadAllText(CatURL);
@@ -156,8 +156,8 @@ namespace EyeWitness
                     System.Environment.Exit(1);
                 }
             }
-
-
+            
+            
 
             //Create dictionary of categories
             categoryRankDict.Add("highval", new object[] { "High Value Targets", 0 });
@@ -301,7 +301,7 @@ namespace EyeWitness
             }
         }
 
-        public static void Writer(WitnessedServer[] urlArray, string[] allUrlArray)
+        public static void Writer(WitnessedServer[] urlArray, string[] allUrlArray, bool skipScreenshots)
         {
 
             int urlCounter = 0;
@@ -327,10 +327,10 @@ namespace EyeWitness
                             // If this is the first instance of the category, create the HTML table
                             if (categoryCounter == 0)
                             {
-                                reportHtml += cronkite.CategorizeInitial((string)entry.Value.ElementAt(0), witnessedObject);
+                                reportHtml += cronkite.CategorizeInitial((string)entry.Value.ElementAt(0), witnessedObject, skipScreenshots);
                                 categoryCounter++;
                             }
-                            reportHtml += cronkite.Reporter(witnessedObject);
+                            reportHtml += cronkite.Reporter(witnessedObject, skipScreenshots);
                             urlCounter++;
 
                             if (urlCounter == 25)
@@ -483,95 +483,95 @@ namespace EyeWitness
             bool local = false;
             ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
             parserResult.WithParsed(o =>
-            {
-                skip = o.skip;
-
-                if (o.Delay != 30)
                 {
-                    Console.WriteLine("[+] Using a custom timeout of " + o.Delay + " seconds per URL thread");
-                    delay = o.Delay * 1000;
-                }
+                    skip = o.skip;
 
-                else
-                    Console.WriteLine("[+] Using the default timeout of 30 seconds per URL thread");
-
-                if (o.Compress)
-                    Console.WriteLine("[+] Compressing files afterwards\n");
-
-                if (o.Favorites)
-                {
-                    // Parse faves
-                    Console.WriteLine("[+] Searching and parsing favorites for IE/Chrome...Skipping FireFox for now");
-                    faveUrls = FavoritesParser();
-                }
-
-                if (o.Favorites && o.File == null)
-                {
-                    Console.WriteLine("[+] No input file, only using parsed favorites (if any)");
-                    try
+                    if (o.Delay != 30)
                     {
-                        if (faveUrls != null) allUrls = faveUrls.ToArray();
+                        Console.WriteLine("[+] Using a custom timeout of " + o.Delay + " seconds per URL thread");
+                        delay = o.Delay * 1000;
                     }
 
-                    catch (NullReferenceException)
-                    {
-                        Console.WriteLine("[-] No favorites or bookmarks found, please try specifying a URL file instead");
-                        System.Environment.Exit(1);
-                    }
-                }
+                    else
+                        Console.WriteLine("[+] Using the default timeout of 30 seconds per URL thread");
 
-                if (o.File != null)
-                {
-                    try
+                    if (o.Compress)
+                        Console.WriteLine("[+] Compressing files afterwards\n");
+
+                    if(o.Favorites)
                     {
-                        if (o.Favorites)
+                        // Parse faves
+                        Console.WriteLine("[+] Searching and parsing favorites for IE/Chrome...Skipping FireFox for now");
+                        faveUrls = FavoritesParser();
+                    }
+
+                    if(o.Favorites && o.File == null)
+                    {
+                        Console.WriteLine("[+] No input file, only using parsed favorites (if any)");
+                        try
                         {
-                            Console.WriteLine("[+] Combining parsed favorites and input file and using that array...");
-                            //Combine favorites array and input URLs
-                            string[] allUrlsTemp = File.ReadAllLines(o.File);
-                            if (faveUrls != null)
+                            if (faveUrls != null) allUrls = faveUrls.ToArray();
+                        }
+
+                        catch(NullReferenceException)
+                        {
+                            Console.WriteLine("[-] No favorites or bookmarks found, please try specifying a URL file instead");
+                            System.Environment.Exit(1);
+                        }
+                    }
+                    
+                    if(o.File != null)
+                    {
+                        try
+                        {
+                            if(o.Favorites)
                             {
-                                string[] faveUrlsArray = faveUrls.Distinct().ToArray();
-                                allUrls = allUrlsTemp.Concat(faveUrlsArray).Distinct().ToArray();
+                                Console.WriteLine("[+] Combining parsed favorites and input file and using that array...");
+                                //Combine favorites array and input URLs
+                                string[] allUrlsTemp = File.ReadAllLines(o.File);
+                                if (faveUrls != null)
+                                {
+                                    string[] faveUrlsArray = faveUrls.Distinct().ToArray();
+                                    allUrls = allUrlsTemp.Concat(faveUrlsArray).Distinct().ToArray();
+                                }
+                            }
+
+                            else
+                            {
+                                Console.WriteLine("[+] Using input text file");
+                                allUrls = File.ReadAllLines(o.File).Distinct().ToArray();
                             }
                         }
-
-                        else
+                        catch (FileNotFoundException)
                         {
-                            Console.WriteLine("[+] Using input text file");
-                            allUrls = File.ReadAllLines(o.File).Distinct().ToArray();
+                            Console.WriteLine("[-] ERROR: The file containing the URLS to scan does not exist!");
+                            Console.WriteLine("[-] ERROR: Please make sure you've provided the correct filepath and try again.");
+                            System.Environment.Exit(1);
                         }
                     }
-                    catch (FileNotFoundException)
-                    {
-                        Console.WriteLine("[-] ERROR: The file containing the URLS to scan does not exist!");
-                        Console.WriteLine("[-] ERROR: Please make sure you've provided the correct filepath and try again.");
-                        System.Environment.Exit(1);
-                    }
-                }
 
-                if (o.cat != null && o.sig != null)
-                {
-                    local = true;
-                    try
+                    if (o.cat != null && o.sig != null)
                     {
-                        tmp_cat = o.cat;
-                        tmp_sig = o.sig;
+                        local = true;
+                        try
+                        {
+                            tmp_cat = o.cat;
+                            tmp_sig = o.sig;
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            Console.WriteLine("[-] ERROR:");
+                            System.Environment.Exit(1);
+                        }
                     }
-                    catch (FileNotFoundException)
-                    {
-                        Console.WriteLine("[-] ERROR:");
-                        System.Environment.Exit(1);
-                    }
-                }
 
 
-                Options.Instance = o;
-            })
+                    Options.Instance = o;
+                })
                 .WithNotParsed(errs => DisplayHelp(parserResult));
 
             DirMaker(Options.Instance.Output);
-            DictMaker(tmp_cat, tmp_sig, local);
+            DictMaker(tmp_cat,tmp_sig,local);
             Options options = Options.Instance;
             Console.WriteLine("\n");
             // Check for favorites flag and if so add the URLs to the list
@@ -588,7 +588,7 @@ namespace EyeWitness
 
             foreach (var url in allUrls)
             {
-                if (!(Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps)))
+                if(!(Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps)))
                 {
                     if (options.http)
                         Uri.TryCreate($"http://{url}", UriKind.Absolute, out uriResult);
@@ -622,9 +622,9 @@ namespace EyeWitness
             Task.WaitAll(sourceTaskList.ToArray());
 
             CategoryCounter(serverArray, categoryDict); //Get a list of how many of each category there are
-            Writer(serverArray, allUrls); //Write the reportz
+            Writer(serverArray, allUrls, skip); //Write the reportz
 
-            if (!skip)
+            if(!skip)
             {
                 foreach (WitnessedServer entry in serverArray)
                 {
@@ -645,8 +645,8 @@ namespace EyeWitness
 
             Thread.Sleep(1000);
             watch.Stop();
-            Console.WriteLine("Execution time: " + watch.ElapsedMilliseconds / 1000 + " Seconds");
-
+            Console.WriteLine("Execution time: " + watch.ElapsedMilliseconds/1000 + " Seconds");
+            
             if (options.Compress)
             {
                 Console.WriteLine("Compressing output directory...");

@@ -131,7 +131,7 @@ namespace EyeWitness
                         string cedate = cert2.GetExpirationDateString();
                         string cpub = cert2.GetPublicKeyString();
 
-
+                  
                         foreach (X509Extension extension in cert2.Extensions)
                         {
                             // Create an AsnEncodedData object using the extensions information.
@@ -140,10 +140,10 @@ namespace EyeWitness
                             {
                                 san = asndata.Format(true).Split(new string[] { "\r\n", "DNS Name=" }, StringSplitOptions.RemoveEmptyEntries);
                             }
-
+                                
                         }
 
-
+    
                         cancellationToken.ThrowIfCancellationRequested();
                         headers = witnessClient.ResponseHeaders.ToString();
 

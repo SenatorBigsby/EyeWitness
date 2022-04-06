@@ -25,8 +25,8 @@ namespace EyeWitness
 
                 foreach (KeyValuePair<string, object[]> entry in catDict)
                 {
-                    if ((int)entry.Value.ElementAt(1) != 0)
-                        html += "<tr><td style=\"padding: 5px;\">" + (string)entry.Value.ElementAt(0) +
+                    if((int)entry.Value.ElementAt(1) != 0)
+                        html += "<tr><td style=\"padding: 5px;\">" + (string)entry.Value.ElementAt(0) + 
                                 " </td><td style=\"padding: 5px;\"> " + (int)entry.Value.ElementAt(1) + "</td></tr>";
                 }
                 html += "<tr><td style =\"padding: 5px;\">" + "Total Pages Screenshotted" + "</td ><td style =\"padding: 5px;\">" + totalPages + "</td></tr>";
@@ -52,15 +52,16 @@ namespace EyeWitness
             return html;
         }
 
-        public string Reporter(WitnessedServer incomingServer)
+        public string Reporter(WitnessedServer incomingServer, bool skipScreenshots)
         {
             string tempHtmlOutput = "";
-            tempHtmlOutput += "<td><div style=\"display: inline-block; width: 300px; word-wrap: break-word\">";
+            tempHtmlOutput += "<td><div style=\"display: inline-block; width: 800px; word-wrap: break-word\">";
             tempHtmlOutput += "<a href=\"" + incomingServer.remoteSystem + "\" target=\"_blank\">" + incomingServer.remoteSystem + "</a>\n<br><br>";
             tempHtmlOutput += "<br><b>Page Title: </b>" + incomingServer.webpageTitle + "<br>\n\n";
             tempHtmlOutput += "<br><b>Headers: </b>\n\n";
-            tempHtmlOutput += "<br><b>Subject Alternative Names: </b>\n\n";
+            //tempHtmlOutput += "<br><b>Subject Alternative Names: </b>\n\n";
 
+            string sanFormatted = String.Join("<p></p>", incomingServer.san);
             // Split the header string into lines and make the variable bold
             foreach (string line in incomingServer.headers.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
             {
@@ -71,23 +72,28 @@ namespace EyeWitness
                     tempHtmlOutput += "<br> <b>" + SecurityElement.Escape(element[0]) + "</b>: " + SecurityElement.Escape(element[1]);
                 }
             }
-
+            tempHtmlOutput += "<br> <b>Subject Alternative Names: </b>: " + sanFormatted;
             if (incomingServer.defaultCreds != null)
             {
                 tempHtmlOutput += "<br>" + incomingServer.defaultCreds;
             }
-            string sanFormatted = String.Join("<p></p>", incomingServer.san);
-            tempHtmlOutput += "<br><br> <a href=\"src\\" + incomingServer.urlSaveName + ".txt\" ";
-            tempHtmlOutput += "target=\"_blank\">Source Code</a></div></td><br>\n";
-            tempHtmlOutput += "<td><div id=\"screenshot\"><a href=\"images\\" + incomingServer.urlSaveName + ".bmp\" ";
-            tempHtmlOutput += "target=\"_blank\"><img src=\"images\\" + incomingServer.urlSaveName + ".bmp\" ";
-            tempHtmlOutput += "height=\"400\">\n\n";
-            tempHtmlOutput += "<td><p>" + sanFormatted + "</p></td></a></div></tr>\n\n";
+            if (!skipScreenshots)
+            {
+                tempHtmlOutput += "<br><br> <a href=\"src\\" + incomingServer.urlSaveName + ".txt\" ";
+                tempHtmlOutput += "target=\"_blank\">Source Code</a></div></td><br>\n";
+                tempHtmlOutput += "<td><div id=\"screenshot\"><a href=\"images\\" + incomingServer.urlSaveName + ".bmp\" ";
+                tempHtmlOutput += "target=\"_blank\"><img src=\"images\\" + incomingServer.urlSaveName + ".bmp\" ";
+                tempHtmlOutput += "height=\"400\"></a></div></td></tr><tr>\n\n";
+            }
+            else
+            {
+                tempHtmlOutput += "<tr>\n\n";
+            }
 
             return tempHtmlOutput;
         }
 
-        public string CategorizeInitial(string category, WitnessedServer incomingServer)
+        public string CategorizeInitial(string category, WitnessedServer incomingServer, bool skipScreenshots)
         {
             string tempHtmlOutput = "";
 
@@ -95,12 +101,22 @@ namespace EyeWitness
             {
                 tempHtmlOutput += "<table><div align=\"left\"><tr><th><h2>" + category + "</h2></tr></th></div>";
                 tempHtmlOutput += "<table border=\"1\">";
-                tempHtmlOutput += @"
-            <tr>
-            <th>Web Request Info</th>
-            <th>Web Screenshot</th>
-            <th>Subject Alternative Names</th></tr>
-            <tr>";
+                if (!skipScreenshots)
+                {
+                    tempHtmlOutput += @"
+                <tr>
+                <th  width= 800px>Web Request Info</th>
+                <th>Web Screenshot</th>
+                <tr>";
+                }
+                else
+                {
+                    tempHtmlOutput += @"
+                <tr>
+                <th width= 800px>Web Request Info</th>
+                <tr>";
+                }
+                
             }
 
             return tempHtmlOutput;
@@ -111,7 +127,7 @@ namespace EyeWitness
             //string html = "";
 
             html += "</table><br>"; //close out the category table and the screenshot/source table
-
+            
             if (pageNumber != 0)
                 html += BuildPages(pageNumbersTotal);
 
@@ -124,10 +140,10 @@ namespace EyeWitness
             int pageNumbers = (int)Math.Ceiling((double)totalPageNumbers / 25);
 
             htmlForPages += "<center><br><a href=\"report_page1.html\">Page 1</a>";
-
+            
             for (int page = 2; page <= pageNumbers; page++)
                 htmlForPages += " <a href=\"report_page" + page + ".html\">Page " + page + "</a> ";
-
+           
             htmlForPages += "\n<br><br></center></body><html>";
             return htmlForPages;
         }

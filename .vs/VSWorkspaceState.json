@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\CS",
+    "\\CS\\EyeWitness"
   ],
-  "SelectedNode": "\\EyeWitness.sln",
+  "SelectedNode": "\\CS\\EyeWitness\\Program.cs",
   "PreviewInSolutionExplorer": false
 }
