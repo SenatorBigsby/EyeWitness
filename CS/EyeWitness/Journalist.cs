@@ -87,7 +87,7 @@ namespace EyeWitness
             }
             else
             {
-                tempHtmlOutput += "<tr>\n\n";
+                tempHtmlOutput += "</td><tr>\n\n";
             }
 
             return tempHtmlOutput;
